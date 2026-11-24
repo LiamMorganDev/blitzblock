@@ -7,7 +7,7 @@ BlitzBlock runs against a user-installed Windows copy of Blitz. The setup checks
 1. The launcher reads the configured Blitz folder and starts Blitz with Chromium host-resolution rules for known external ad domains.
 2. A private Chromium DevTools pipe connects Blitz to the local Node process. It uses inherited process handles instead of a remotely accessible debugging port.
 3. The launcher registers CSS for Blitz desktop origins. It attaches on new execution contexts and keeps the stylesheet present if the page replaces its head content.
-4. The CSS hides known ad components and promo media. It removes the corresponding grid column only when the known ad marker is present.
+4. The CSS hides known ad components and promo media. It removes the corresponding grid column only when the known ad marker is present. In filtered sessions, the top-left Home link displays BlitzBlock using the same link target.
 
 ## Findings from Blitz 3.0.29
 

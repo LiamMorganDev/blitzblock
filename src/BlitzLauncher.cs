@@ -12,7 +12,7 @@ using Microsoft.Win32;
 
 [assembly: AssemblyTitle("BlitzBlock")]
 [assembly: AssemblyDescription("Launches Blitz with local promotional content filters")]
-[assembly: AssemblyVersion("1.0.0.0")]
+[assembly: AssemblyVersion("1.1.0.0")]
 
 internal static class BlitzLauncher
 {
@@ -31,6 +31,11 @@ internal static class BlitzLauncher
         {
             string location = Assembly.GetExecutingAssembly().Location;
             string root = Path.GetDirectoryName(location);
+            if (args.Length == 2 && args[0] == "--apply-update")
+            {
+                ApplyUpdate(args[1]);
+                return 0;
+            }
             if (Array.IndexOf(args, "--uninstall") >= 0)
             {
                 StartUninstaller(location);
@@ -54,7 +59,7 @@ internal static class BlitzLauncher
                 string blitz = FindBlitz(File.ReadAllText(settingsFile));
                 if (blitz == null)
                     throw new InvalidOperationException("Blitz has moved or is missing. Run BlitzBlock Setup again and select its current folder.");
-                Launch(root, blitz);
+                if (Array.IndexOf(args, "--skip-update") >= 0 || !BlitzBlockUpdate.TryStart()) Launch(root, blitz);
             }
             else
             {
@@ -128,6 +133,35 @@ internal static class BlitzLauncher
         if (makeShortcut) WriteShortcut(ShortcutPath(Environment.SpecialFolder.DesktopDirectory), root, installed, icon);
         else RemoveShortcut(root, Environment.SpecialFolder.DesktopDirectory);
         RegisterInstalledApp(root, installed);
+    }
+
+    private static void ApplyUpdate(string parent)
+    {
+        string root = InstalledFolder();
+        if (root == null) return;
+        string installed = Path.Combine(root, "BlitzBlock.exe");
+        int pid;
+        try
+        {
+            if (!Int32.TryParse(parent, out pid)) return;
+            try
+            {
+                using (Process previous = Process.GetProcessById(pid))
+                    if (String.Equals(previous.MainModule.FileName, installed, StringComparison.OrdinalIgnoreCase)
+                        && !previous.WaitForExit(10000))
+                        throw new IOException("The previous BlitzBlock launcher is still running.");
+            }
+            catch (ArgumentException) {}
+
+            string blitz = FindBlitz(SavedBlitzFolder(root));
+            if (blitz != null && AssemblyName.GetAssemblyName(installed).Version < BlitzBlockUpdate.CurrentVersion)
+                Install(root, blitz, HasShortcut(root));
+        }
+        catch (Exception error)
+        {
+            Trace.WriteLine("BlitzBlock update install failed: " + error.Message);
+        }
+        Process.Start(new ProcessStartInfo(installed, "--skip-update") { UseShellExecute = false });
     }
 
     private static void Launch(string root, string blitz)
@@ -254,7 +288,7 @@ internal static class BlitzLauncher
         using (RegistryKey app = Registry.CurrentUser.CreateSubKey(UninstallPath))
         {
             app.SetValue("DisplayName", Title);
-            app.SetValue("DisplayVersion", "1.0.0");
+            app.SetValue("DisplayVersion", BlitzBlockUpdate.CurrentVersion.ToString(3));
             app.SetValue("Publisher", "LiamMorganDev");
             app.SetValue("InstallLocation", root);
             app.SetValue("DisplayIcon", Path.Combine(root, "BlitzBlock.ico") + ",0");

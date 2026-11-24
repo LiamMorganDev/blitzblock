@@ -28,6 +28,13 @@ const css = `
   ${rail}, ${grid} > .ads-rail-marker, ${banner},
   .leaderboard-container:has(> ${banner}:only-child) { display: none !important; }
   ${grid} { grid-template-columns: minmax(0, 1fr) !important; }
+  .blitz-logo > a.blitz-home-link:has(> svg) { width: auto; }
+  .blitz-logo > a.blitz-home-link > svg { display: none; }
+  .blitz-logo > a.blitz-home-link:has(> svg)::before {
+    content: "BlitzBlock";
+    font: 700 14px "Segoe UI", sans-serif;
+    white-space: nowrap;
+  }
 `;
 const installStyle = `(() => {
   if (!['https://blitzapp.gg', 'https://blitz-desktop.blitz.gg'].includes(location.origin)) return;
@@ -64,6 +71,9 @@ async function apply({ targetInfo, sessionId }) {
       if (state?.host !== 'blitzapp.gg') return;
       assert.equal(state.styles, 1);
       assert.equal(state.rail, 'none');
+      const headerLabel = await evaluate(`getComputedStyle(document.querySelector('.blitz-logo > a.blitz-home-link'), '::before').content`);
+      assert.equal(headerLabel, '"BlitzBlock"');
+      trace('BlitzBlock header verified');
       const profileShots = process.env.BLITZ_TEST_PROFILE_SHOTS;
       if (profileShots && await evaluate("location.pathname.includes('/lol/profile/')")) {
         const snapshot = async (width, label) => {

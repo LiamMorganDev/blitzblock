@@ -11,6 +11,8 @@ BlitzBlock launches your existing Windows copy of Blitz with fewer ads and Premi
 3. Run setup, confirm your Blitz folder, and choose where to install BlitzBlock. The desktop shortcut is optional.
 4. Open **BlitzBlock** from Start. The launcher runs without a terminal.
 
+BlitzBlock checks for newer releases on a fresh launch and applies verified updates automatically. If the check fails, the installed version still opens.
+
 The installer is unsigned. Windows may show a SmartScreen warning. You can inspect and build the source yourself.
 
 Run setup again to change the Blitz folder or toggle the desktop shortcut. To remove BlitzBlock, use **Settings → Apps → Installed apps → BlitzBlock → Uninstall**, or rerun setup. Your Blitz install and account settings are kept.

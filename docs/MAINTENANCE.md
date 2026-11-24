@@ -19,3 +19,9 @@ The script downloads a pinned official Node.js archive, verifies its SHA-256, ch
 7. Publish the tested setup EXE with a release note naming the Blitz versions you actually exercised. Include no Blitz binaries, local profiles, raw account screenshots, or logs with personal data.
 
 Prefer fixing the local launcher. Keep the vendor app and updater enabled. If Blitz relaunches itself normally after an update, open BlitzBlock again.
+
+## BlitzBlock updates
+
+The installed launcher checks the latest stable GitHub release on a fresh launch. It accepts a newer version only when the official release has a BlitzBlock.Setup.exe asset with a SHA-256 digest. The launcher verifies the digest and assembly version before running the installer. If GitHub is unavailable or verification fails, it opens the installed version. Update checks run without changing the vendor Blitz updater.
+
+For each release, update AssemblyVersion in src/BlitzLauncher.cs and publish an identical numeric tag with a v prefix, for example v1.0.1 for 1.0.1.0. Use BlitzBlock.Setup.exe as the published asset name. The checksum is supplied by GitHub and does not replace Authenticode signing. Keep the GitHub release account protected by multifactor authentication.

@@ -42,7 +42,7 @@ $exe = Join-Path $build 'BlitzBlock Setup.exe'
 $icon = Join-Path $source 'BlitzBlock.ico'
 & $csc /nologo /target:winexe /platform:x64 /optimize+ "/out:$exe" "/win32icon:$icon" `
     /reference:Microsoft.CSharp.dll /reference:System.Windows.Forms.dll /reference:System.Drawing.dll `
-    /reference:System.IO.Compression.dll /reference:System.IO.Compression.FileSystem.dll `
-    "/resource:$payload,payload.zip" $generated (Join-Path $source 'SetupWizard.cs')
+    /reference:System.IO.Compression.dll /reference:System.IO.Compression.FileSystem.dll /reference:System.Web.Extensions.dll `
+    "/resource:$payload,payload.zip" $generated (Join-Path $source 'SetupWizard.cs') (Join-Path $source 'BlitzBlockUpdate.cs')
 if ($LASTEXITCODE) { throw 'Setup build failed.' }
 Get-Item -LiteralPath $exe

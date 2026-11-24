@@ -1,5 +1,7 @@
 # Build and maintain BlitzBlock
 
+For file ownership, release steps, and Windows icon diagnostics, see the [developer handoff](DEVELOPMENT.md).
+
 ## Build
 
 Use Windows x64, Windows PowerShell or PowerShell 7, and the Windows .NET Framework compiler. In the repository root, run:

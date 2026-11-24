@@ -31,6 +31,7 @@ Screenshots are cropped to omit account details. The installer path is shown as 
 
 - [How the launcher works and what we found](docs/HOW_IT_WORKS.md)
 - [Build, verify, and update filters](docs/MAINTENANCE.md)
+- [Developer handoff and release checklist](docs/DEVELOPMENT.md)
 
 ## Scope and license
 

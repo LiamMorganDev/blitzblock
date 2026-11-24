@@ -13,7 +13,7 @@ using Microsoft.Win32;
 
 [assembly: AssemblyTitle("BlitzBlock")]
 [assembly: AssemblyDescription("Launches Blitz with local promotional content filters")]
-[assembly: AssemblyVersion("1.3.0.0")]
+[assembly: AssemblyVersion("1.3.1.0")]
 
 internal static class BlitzLauncher
 {
@@ -215,7 +215,8 @@ internal static class BlitzLauncher
         using (var small = new Icon(path, SystemInformation.SmallIconSize))
         {
             IntPtr previous = IntPtr.Zero;
-            int trayProcess = 0;
+            long nextTrayRefresh = 0;
+            var elapsed = Stopwatch.StartNew();
             while (!launcher.WaitForExit(1000))
             {
                 foreach (Process candidate in Process.GetProcessesByName("Blitz"))
@@ -225,8 +226,10 @@ internal static class BlitzLauncher
                     {
                         if (!String.Equals(candidate.MainModule.FileName, blitz, StringComparison.OrdinalIgnoreCase))
                             continue;
-                        if (candidate.Id != trayProcess && BlitzBlockTaskbar.SetTrayPresentation(candidate.Id, small.Handle))
-                            trayProcess = candidate.Id;
+                        // Blitz can rewrite the tooltip after its first tray registration.
+                        if (elapsed.ElapsedMilliseconds >= nextTrayRefresh &&
+                            BlitzBlockTaskbar.SetTrayPresentation(candidate.Id, small.Handle))
+                            nextTrayRefresh = elapsed.ElapsedMilliseconds + 5000;
                         IntPtr window = candidate.MainWindowHandle;
                         if (window == IntPtr.Zero || window == previous)
                             continue;

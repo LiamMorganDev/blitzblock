@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.1] - 2026-11-24
+
+### Fixed
+
+- The Windows tray label returns to **BlitzBlock** if Blitz resets it.
+
 ## [1.3.0] - 2026-11-24
 
 ### Changed

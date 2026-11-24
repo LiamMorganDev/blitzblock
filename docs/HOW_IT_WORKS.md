@@ -7,7 +7,7 @@ BlitzBlock runs against a user-installed Windows copy of Blitz. The setup checks
 1. The launcher reads the configured Blitz folder and starts Blitz with Chromium host-resolution rules for known external ad domains.
 2. A private Chromium DevTools pipe connects Blitz to the local Node process. It uses inherited process handles instead of a remotely accessible debugging port.
 3. The launcher registers CSS for Blitz desktop origins. It attaches on new execution contexts and keeps the stylesheet present if the page replaces its head content.
-4. The CSS hides known ad components and promo media. It removes the corresponding grid column only when the known ad marker is present. In filtered sessions, the top-left Home link displays BlitzBlock using the same link target.
+4. The CSS hides known ad components and promo media. It removes the corresponding grid column only when the known ad marker is present. In filtered sessions, the top-left Home link displays BlitzBlock using the same link target. The version row also displays the installed version of BlitzBlock.
 
 ## Findings from Blitz 3.0.29
 
@@ -19,6 +19,6 @@ BlitzBlock runs against a user-installed Windows copy of Blitz. The setup checks
 
 ## Windows integration
 
-Setup writes a per-user Installed Apps entry and Start shortcut. An optional desktop shortcut points to the installed launcher. The installed icon is produced locally from the Blitz executable icon by flipping and recoloring it. BlitzBlock tries to set the filtered Blitz window icon through Windows messaging. Taskbar grouping and pinned icons depend on Windows and Blitz. Blitz manages its own notification-area icon.
+Setup writes a per-user Installed Apps entry and Start shortcut. An optional desktop shortcut points to the installed launcher. The installed icon is produced locally from the Blitz executable icon by flipping and recoloring it. BlitzBlock sets the filtered window icon and a matching Windows taskbar identity on the window and installed shortcuts. If you want a pinned shortcut, pin BlitzBlock from Start. On Blitz 3.0.29, BlitzBlock uses the Windows notification API to change the image of the existing Electron tray icon while preserving its menu and callbacks. Future Blitz or Electron versions may change the icon identity.
 
 Uninstall targets known BlitzBlock files, its shortcuts and registry entries. Unrelated files in the chosen folder remain. The Blitz executable, game files, and Blitz user data are outside the uninstall scope.

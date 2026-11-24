@@ -12,7 +12,7 @@ using Microsoft.Win32;
 
 [assembly: AssemblyTitle("BlitzBlock")]
 [assembly: AssemblyDescription("Launches Blitz with local promotional content filters")]
-[assembly: AssemblyVersion("1.1.0.0")]
+[assembly: AssemblyVersion("1.2.0.0")]
 
 internal static class BlitzLauncher
 {
@@ -172,11 +172,12 @@ internal static class BlitzLauncher
             "-NoProfile -NonInteractive -ExecutionPolicy Bypass -File \"" + Path.Combine(folder, "open.ps1") + "\"");
         launch.WorkingDirectory = folder;
         launch.EnvironmentVariables["BLITZBLOCK_BLITZ_EXE"] = blitz;
+        launch.EnvironmentVariables["BLITZBLOCK_VERSION"] = BlitzBlockUpdate.CurrentVersion.ToString(3);
         launch.UseShellExecute = false;
         launch.CreateNoWindow = true;
         using (var process = Process.Start(launch))
         {
-            ApplyWindowIcon(process, blitz, Path.Combine(root, "BlitzBlock.ico"));
+            ApplyWindowIcon(process, blitz, Path.Combine(root, "BlitzBlock.ico"), Assembly.GetExecutingAssembly().Location);
             if (process.ExitCode != 0)
                 throw new InvalidOperationException("Blitz could not start. Close Blitz from the system tray and try again.");
         }
@@ -186,13 +187,14 @@ internal static class BlitzLauncher
     private static extern bool SendMessageTimeout(IntPtr window, uint message, IntPtr size, IntPtr icon,
         uint flags, uint timeout, out IntPtr result);
 
-    private static void ApplyWindowIcon(Process launcher, string blitz, string path)
+    private static void ApplyWindowIcon(Process launcher, string blitz, string path, string launcherPath)
     {
         if (!File.Exists(path)) { launcher.WaitForExit(); return; }
         using (var large = new Icon(path, SystemInformation.IconSize))
         using (var small = new Icon(path, SystemInformation.SmallIconSize))
         {
             IntPtr previous = IntPtr.Zero;
+            int trayProcess = 0;
             while (!launcher.WaitForExit(1000))
             {
                 foreach (Process candidate in Process.GetProcessesByName("Blitz"))
@@ -200,13 +202,17 @@ internal static class BlitzLauncher
                 {
                     try
                     {
+                        if (!String.Equals(candidate.MainModule.FileName, blitz, StringComparison.OrdinalIgnoreCase))
+                            continue;
+                        if (candidate.Id != trayProcess && BlitzBlockTaskbar.SetTrayIcon(candidate.Id, small.Handle))
+                            trayProcess = candidate.Id;
                         IntPtr window = candidate.MainWindowHandle;
-                        if (window == IntPtr.Zero || window == previous ||
-                            !String.Equals(candidate.MainModule.FileName, blitz, StringComparison.OrdinalIgnoreCase))
+                        if (window == IntPtr.Zero || window == previous)
                             continue;
                         IntPtr result;
                         SendMessageTimeout(window, 0x0080, IntPtr.Zero, small.Handle, 2, 250, out result);
-                        if (SendMessageTimeout(window, 0x0080, new IntPtr(1), large.Handle, 2, 250, out result))
+                        SendMessageTimeout(window, 0x0080, new IntPtr(1), large.Handle, 2, 250, out result);
+                        if (BlitzBlockTaskbar.SetWindow(window, launcherPath, path))
                             previous = window;
                     }
                     catch (InvalidOperationException) {}
@@ -267,6 +273,7 @@ internal static class BlitzLauncher
         shortcut.Description = "Open Blitz with promo filtering";
         shortcut.IconLocation = iconPath + ",0";
         shortcut.Save();
+        BlitzBlockTaskbar.SetShortcut(path);
     }
 
     private const string UninstallPath = @"Software\Microsoft\Windows\CurrentVersion\Uninstall\BlitzBlock";

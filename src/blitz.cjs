@@ -36,13 +36,23 @@ const css = `
     white-space: nowrap;
   }
 `;
+const blockVersion = process.env.BLITZBLOCK_VERSION;
+const versionStyle = /^\d+\.\d+\.\d+$/.test(blockVersion || '') ? `
+  .app-version:has(> button.app-version-label)::after {
+    content: " · BB v${blockVersion}";
+    color: inherit;
+    font: inherit;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+` : '';
 const installStyle = `(() => {
   if (!['https://blitzapp.gg', 'https://blitz-desktop.blitz.gg'].includes(location.origin)) return;
   if (window.__blitzLocalPromoFilter) return;
   window.__blitzLocalPromoFilter = true;
   const style = document.createElement('style');
   style.id = 'blitz-local-promo-filter';
-  style.textContent = ${JSON.stringify(css + sharedPromos)};
+  style.textContent = ${JSON.stringify(css + sharedPromos + versionStyle)};
   const restore = () => {
     if (!style.isConnected && document.head) document.head.append(style);
   };
@@ -74,6 +84,12 @@ async function apply({ targetInfo, sessionId }) {
       const headerLabel = await evaluate(`getComputedStyle(document.querySelector('.blitz-logo > a.blitz-home-link'), '::before').content`);
       assert.equal(headerLabel, '"BlitzBlock"');
       trace('BlitzBlock header verified');
+      if (versionStyle) {
+        const versions = await evaluate(`(() => { const native = document.querySelector('button.app-version-label'); return [native.textContent.trim(),getComputedStyle(native.parentElement,'::after').content]; })()`);
+        assert.match(versions[0], /v?\d/);
+        assert.ok(versions[1].includes('BB v' + blockVersion));
+        trace('Both version labels verified');
+      }
       const profileShots = process.env.BLITZ_TEST_PROFILE_SHOTS;
       if (profileShots && await evaluate("location.pathname.includes('/lol/profile/')")) {
         const snapshot = async (width, label) => {

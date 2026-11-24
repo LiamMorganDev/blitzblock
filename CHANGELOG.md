@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.2 — 2026-11-24
+
+- Give filtered Blitz windows a purple BlitzBlock taskbar button and update Blitz's existing tray icon on supported builds.
+- Show the installed BlitzBlock version beside the Blitz version in the header.
+
 ## v1.1 — 2026-11-24
 
 - Check for stable BlitzBlock releases on launch, verify the download, then update automatically.

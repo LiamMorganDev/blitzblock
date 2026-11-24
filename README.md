@@ -12,6 +12,7 @@ BlitzBlock launches your existing Windows copy of Blitz with fewer ads and Premi
 4. Open **BlitzBlock** from Start. The launcher runs without a terminal.
 
 BlitzBlock checks for newer releases on a fresh launch and applies verified updates automatically. If the check fails, the installed version still opens.
+Open BlitzBlock again to return to the running window, even from a different BlitzBlock install.
 
 The installer is unsigned. Windows may show a SmartScreen warning. You can inspect and build the source yourself.
 

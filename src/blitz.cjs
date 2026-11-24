@@ -26,8 +26,15 @@ const sharedPromos = `
 `;
 const css = `
   ${rail}, ${grid} > .ads-rail-marker, ${banner},
+  .profile-layout .overview > .advertisement:has(> ${promoSlot}:only-child),
+  .profile-layout .overview > .promotion:has(> ${banner}:only-child),
   .leaderboard-container:has(> ${banner}:only-child) { display: none !important; }
   ${grid} { grid-template-columns: minmax(0, 1fr) !important; }
+  ${grid}:has(> .content-column > .leaderboard-container) {
+    box-sizing: border-box;
+    width: 100% !important;
+    max-width: none !important;
+  }
   .blitz-logo > a.blitz-home-link:has(> svg) { width: auto; }
   .blitz-logo > a.blitz-home-link > svg { display: none; }
   .blitz-logo > a.blitz-home-link:has(> svg)::before {
@@ -55,8 +62,9 @@ const installStyle = `(() => {
   style.textContent = ${JSON.stringify(css + sharedPromos + versionStyle)};
   const restore = () => {
     if (!style.isConnected && document.head) document.head.append(style);
+    if (document.head && document.title !== 'BlitzBlock') document.title = 'BlitzBlock';
   };
-  new MutationObserver(restore).observe(document, { childList: true, subtree: true });
+  new MutationObserver(restore).observe(document, { childList: true, characterData: true, subtree: true });
   restore();
 })()`;
 

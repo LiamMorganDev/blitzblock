@@ -7,12 +7,13 @@ using System.IO.Compression;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Win32;
 
 [assembly: AssemblyTitle("BlitzBlock")]
 [assembly: AssemblyDescription("Launches Blitz with local promotional content filters")]
-[assembly: AssemblyVersion("1.2.0.0")]
+[assembly: AssemblyVersion("1.3.0.0")]
 
 internal static class BlitzLauncher
 {
@@ -20,6 +21,7 @@ internal static class BlitzLauncher
     private const string PayloadId = "__PAYLOAD_ID__";
 
     private const string Settings = "blitz-location.txt";
+    private const string SessionMutex = @"Local\LiamMorganDev.BlitzBlock";
     internal static readonly string Local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 
     [STAThread]
@@ -56,10 +58,23 @@ internal static class BlitzLauncher
             if (Path.GetFileName(location).Equals("BlitzBlock.exe", StringComparison.OrdinalIgnoreCase)
                 && File.Exists(settingsFile))
             {
-                string blitz = FindBlitz(File.ReadAllText(settingsFile));
-                if (blitz == null)
-                    throw new InvalidOperationException("Blitz has moved or is missing. Run BlitzBlock Setup again and select its current folder.");
-                if (Array.IndexOf(args, "--skip-update") >= 0 || !BlitzBlockUpdate.TryStart()) Launch(root, blitz);
+                using (var session = new Mutex(false, SessionMutex))
+                {
+                    if (!TryAcquireSession(session))
+                    {
+                        BlitzBlockTaskbar.ActivateExistingWindow();
+                        return 0;
+                    }
+                    try
+                    {
+                        if (BlitzBlockTaskbar.ActivateExistingWindow()) return 0;
+                        string blitz = FindBlitz(File.ReadAllText(settingsFile));
+                        if (blitz == null)
+                            throw new InvalidOperationException("Blitz has moved or is missing. Run BlitzBlock Setup again and select its current folder.");
+                        if (Array.IndexOf(args, "--skip-update") >= 0 || !BlitzBlockUpdate.TryStart()) Launch(root, blitz);
+                    }
+                    finally { session.ReleaseMutex(); }
+                }
             }
             else
             {
@@ -73,6 +88,12 @@ internal static class BlitzLauncher
             MessageBox.Show(error.Message, Title, MessageBoxButtons.OK, MessageBoxIcon.Error);
             return 1;
         }
+    }
+
+    private static bool TryAcquireSession(Mutex session)
+    {
+        try { return session.WaitOne(0); }
+        catch (AbandonedMutexException) { return true; }
     }
 
     internal static string ResolveFolder(string path)
@@ -204,7 +225,7 @@ internal static class BlitzLauncher
                     {
                         if (!String.Equals(candidate.MainModule.FileName, blitz, StringComparison.OrdinalIgnoreCase))
                             continue;
-                        if (candidate.Id != trayProcess && BlitzBlockTaskbar.SetTrayIcon(candidate.Id, small.Handle))
+                        if (candidate.Id != trayProcess && BlitzBlockTaskbar.SetTrayPresentation(candidate.Id, small.Handle))
                             trayProcess = candidate.Id;
                         IntPtr window = candidate.MainWindowHandle;
                         if (window == IntPtr.Zero || window == previous)

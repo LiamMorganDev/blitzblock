@@ -28,4 +28,4 @@ The installed launcher checks the latest stable GitHub release on a fresh launch
 
 For each release, update AssemblyVersion in src/BlitzLauncher.cs and publish an identical numeric tag with a v prefix, for example v1.0.1 for 1.0.1.0. Use BlitzBlock.Setup.exe as the published asset name. The checksum is supplied by GitHub and does not replace Authenticode signing. Keep the GitHub release account protected by multifactor authentication.
 
-When testing a new Blitz version, check the running taskbar button and the existing notification-area icon separately. The latter currently uses the Electron tray host and the icon ID verified against Blitz 3.0.29. If the tray image stays red, recheck that identity before changing anything in the Windows notification code. Preserve the original tray menu and callbacks.
+When testing a new Blitz version, check that the taskbar window and notification-area tooltip both say BlitzBlock. The tray icon uses the Electron tray host and the icon ID verified against Blitz 3.0.29. If the tray image or tooltip stays unchanged, recheck that identity before changing the Windows notification code. Preserve the original tray menu and callbacks.

@@ -61,11 +61,56 @@ internal static class BlitzBlockTaskbar
     [DllImport("user32.dll")]
     private static extern uint GetWindowThreadProcessId(IntPtr window, out uint process);
 
+    [DllImport("user32.dll")]
+    private static extern bool IsIconic(IntPtr window);
+
+    [DllImport("user32.dll")]
+    private static extern bool IsWindowVisible(IntPtr window);
+
+    [DllImport("user32.dll")]
+    private static extern bool ShowWindowAsync(IntPtr window, int command);
+
+    [DllImport("user32.dll")]
+    private static extern bool SetForegroundWindow(IntPtr window);
+
+    [DllImport("ole32.dll")]
+    private static extern int PropVariantClear(ref PropertyValue value);
+
+    internal static bool ActivateExistingWindow()
+    {
+        IntPtr window = IntPtr.Zero;
+        while ((window = FindWindowEx(IntPtr.Zero, window, "Chrome_WidgetWin_1", null)) != IntPtr.Zero)
+        {
+            PropertyStore store;
+            Guid id = typeof(PropertyStore).GUID;
+            if (SHGetPropertyStoreForWindow(window, ref id, out store) < 0) continue;
+            try
+            {
+                var key = new PropertyKey { Format = AppModel, Id = 5 };
+                PropertyValue value;
+                store.GetValue(ref key, out value);
+                try
+                {
+                    if (value.Type != 31 || Marshal.PtrToStringUni(value.Text) != AppId) continue;
+                }
+                finally { PropVariantClear(ref value); }
+            }
+            catch (COMException) { continue; }
+            finally { Marshal.ReleaseComObject(store); }
+
+            if (IsIconic(window)) ShowWindowAsync(window, 9); // SW_RESTORE
+            else if (!IsWindowVisible(window)) ShowWindowAsync(window, 5); // SW_SHOW
+            SetForegroundWindow(window);
+            return true;
+        }
+        return false;
+    }
+
     [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool Shell_NotifyIcon(uint message, ref NotifyIcon icon);
 
-    internal static bool SetTrayIcon(int processId, IntPtr icon)
+    internal static bool SetTrayPresentation(int processId, IntPtr icon)
     {
         IntPtr host = IntPtr.Zero;
         while ((host = FindWindowEx(IntPtr.Zero, host, "Electron_NotifyIconHostWindow", null)) != IntPtr.Zero)
@@ -75,7 +120,8 @@ internal static class BlitzBlockTaskbar
             if (owner != processId) continue;
             // shortcut: Blitz 3.0.29 uses tray ID 3. Recheck if Electron changes it.
             var data = new NotifyIcon {
-                Size = (uint)Marshal.SizeOf(typeof(NotifyIcon)), Window = host, Id = 3, Flags = 2, Icon = icon
+                Size = (uint)Marshal.SizeOf(typeof(NotifyIcon)), Window = host, Id = 3,
+                Flags = 2 | 4 | 128, Icon = icon, Tip = "BlitzBlock" // NIF_ICON | NIF_TIP | NIF_SHOWTIP
             };
             return Shell_NotifyIcon(1, ref data);
         }
